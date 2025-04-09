@@ -1,0 +1,7 @@
+program Project1;
+
+{$APPTYPE CONSOLE}
+
+begin
+  Writeln('Hello world!');
+end.
