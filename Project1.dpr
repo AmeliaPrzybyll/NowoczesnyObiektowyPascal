@@ -3,7 +3,10 @@
 {$APPTYPE CONSOLE}
 
 uses
-  System.SysUtils, System.StrUtils;
+  System.SysUtils,
+  System.StrUtils,
+  Unit1 in 'Unit1.pas',
+  Unit2 in 'Unit2.pas' {DataModule2: TDataModule};
 
 type
   TSkarb = (Brak, Miecz, Pierscien);
@@ -11,6 +14,7 @@ type
 var
   Skarb: TSkarb;
   HP: Integer;
+  Sword: TItem;
 
 procedure PokazMape(Aktualna: string);
 begin
@@ -44,8 +48,9 @@ begin
         Randomize;
         TrollRzut := Random(6) + 1;
         GraczRzut := Random(6) + 1;
-        if Skarb = Miecz then
-          Inc(GraczRzut, 2);
+        if DataModule2.Miecz.Owns then
+          Inc(GraczRzut, DataModule2.Miecz.Damage);
+
 
         Writeln('Twój rzut: ', GraczRzut, ', rzut trolla: ', TrollRzut);
 
@@ -124,8 +129,8 @@ begin
           SmokRzut := Random(6) + 1;
           GraczRzut := Random(6) + 1;
 
-          if Skarb = Miecz then
-            Inc(GraczRzut, 2);
+          if DataModule2.Miecz.Owns then
+            Inc(GraczRzut, DataModule2.Miecz.Damage);
 
           Writeln('Twój rzut: ', GraczRzut, ', rzut smoka: ', SmokRzut);
 
@@ -173,8 +178,8 @@ begin
     Los := Random(2);
     if Los = 0 then
     begin
-      Skarb := Miecz;
-      Writeln('Znalazłeś miecz!');
+      DataModule2.Miecz.Owns := True;
+      Writeln('Znalazłeś miecz: ', DataModule2.Miecz.Name, ' (siła: ', DataModule2.Miecz.Damage, ')');
     end
     else
     begin
@@ -222,55 +227,54 @@ var
 begin
   PokazMape('Zamek');
   Writeln('Jesteś w zamku');
-  Writeln('w - wróc do lasu');
-  Writeln('z - zostañ');
+  Writeln('w - wróć do lasu');
+  Writeln('z - zostań');
 
   Readln(C);
 
   case C of
-    'w':Las;
-    'z':begin
-          if Skarb <> Brak then
+    'w': Las;
+    'z':
+      begin
+        if DataModule2.Miecz.Owns then
+        begin
+          Writeln('Masz miecz: ', DataModule2.Miecz.Name, '! Zostałeś pasowany na rycerza');
+        end
+        else if Skarb = Pierscien then
+        begin
+          Writeln('Masz pierścień!');
+          Writeln('Księżniczka zakochała się w pierścieniu!');
+          Writeln('Poślubiasz księżniczkę! Gratulacje!');
+        end
+        else
+        begin
+          Writeln('Nie masz nic do zaoferowania...');
+          Randomize;
+          R := Random(100);
+          if R < 25 then
           begin
-            case Skarb of
-              Miecz:
-                begin
-                  Writeln('Masz miecz! Zostałes pasowny na rycerza');
-                end;
-              Pierscien:
-                begin
-                  Writeln('Masz pierścień!');
-                  Writeln('Księżniczka zakochała się w pierścieniu!');
-                  Writeln('Poślubiasz księżniczkę! Gratulacje!');
-                end;
-            end;
+            Writeln('Zostajesz ścięty! Koniec gry.');
           end
           else
           begin
-            Writeln('Nie masz nic do zaoferowania...');
-            Randomize;
-            R := Random(100);
-            if R < 25 then
-            begin
-              Writeln('Zostajesz ścięty! Koniec gry.');
-            end
-            else
-            begin
-              Writeln('Zostajesz wyrzucony z zamku.');
-              Las;
-              Exit;
-            end;
+            Writeln('Zostajesz wyrzucony z zamku.');
+            Las;
+            Exit;
           end;
         end;
+      end;
   else
-        begin
-          Writeln('Nieprawidłowa odpowiedż, jeszcze raz');
-          Las;
-        end;
+    begin
+      Writeln('Nieprawidłowa odpowiedź, jeszcze raz');
+      Las;
+    end;
   end;
 end;
 
+
+
 begin
+  DataModule2 := TDataModule2.Create(nil);
   Skarb := Brak;
   HP := 3;
   Las;
